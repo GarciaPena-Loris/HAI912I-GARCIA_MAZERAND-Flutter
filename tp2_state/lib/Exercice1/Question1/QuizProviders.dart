@@ -30,7 +30,7 @@ class _QuizProvidersState extends State<QuizProviders> {
       appBar: AppBar(
         title: Text("${widget.theme['theme']}"),
         centerTitle: true,
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.purpleAccent,
         actions: [
           Row(
             children: [
@@ -98,7 +98,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                                         : null,
                             minimumSize: const Size(130, 50),
                             side: userAnswer == null
-                                ? const BorderSide(color: Colors.purple)
+                                ? const BorderSide(color: Colors.purpleAccent)
                                 : BorderSide.none,
                           ),
                           onPressed: userAnswer == null
@@ -133,7 +133,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                                         : null,
                             minimumSize: const Size(130, 50),
                             side: userAnswer == null
-                                ? const BorderSide(color: Colors.purple)
+                                ? const BorderSide(color: Colors.purpleAccent)
                                 : BorderSide.none,
                           ),
                           onPressed: userAnswer == null
@@ -216,7 +216,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                         icon: Icon(Icons.arrow_back, color: textColor),
                         label: Text("Précédent", style: TextStyle(color: textColor)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
+                          backgroundColor: Colors.purpleAccent,
                           minimumSize: const Size(140, 40),
                         ),
                       ),
@@ -229,7 +229,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                         label: Text("Suivant", style: TextStyle(color: textColor)),
                         icon: Icon(Icons.arrow_forward, color: textColor),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
+                          backgroundColor: Colors.purpleAccent,
                           minimumSize: const Size(140, 40),
                         ),
                       ),

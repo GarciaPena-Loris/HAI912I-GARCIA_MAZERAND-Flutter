@@ -157,7 +157,7 @@ class QuizPageState extends State<QuizPage> {
                       ),
                       onPressed: userAnswer == null
                           ? () => _submitAnswer(true)
-                          : () {}, // Désactivé si déjà répondu
+                          : () {},
                       child: Text(
                         "Vrai",
                         style: TextStyle(color: textColor),

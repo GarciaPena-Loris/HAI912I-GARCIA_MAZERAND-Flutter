@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../ThemeProvider.dart';
+import 'ThemeSwitcher.dart';
 
 class ResultPage extends StatelessWidget {
   final int score;
@@ -20,27 +21,12 @@ class ResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Résultats"),
         centerTitle: true,
-        backgroundColor: Colors.purple,
-        actions: [
-          Row(
-            children: [
-              if (!isDarkMode) const Icon(Icons.wb_sunny, color: Colors.yellow),
-              Switch(
-                value: isDarkMode,
-                onChanged: themeProvider.toggleTheme,
-                activeColor: Colors.black,
-              ),
-              if (isDarkMode) const Icon(Icons.nightlight_round, color: Colors.yellow),
-            ],
-          ),
-        ],
+        backgroundColor: Colors.purpleAccent,
+        actions: [ThemeSwitcher()],
       ),
       body: Center(
         child: Column(
@@ -59,7 +45,7 @@ class ResultPage extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                backgroundColor: Colors.purpleAccent,
                 minimumSize: const Size(140, 40),
               ),
               icon: const Icon(Icons.arrow_back, color: Colors.white),

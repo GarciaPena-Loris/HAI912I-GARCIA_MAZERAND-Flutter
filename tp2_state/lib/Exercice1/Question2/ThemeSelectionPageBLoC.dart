@@ -1,34 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../ThemeSwitcher.dart';
-import 'QuizProviders.dart';
+import 'QuizAppBLoC.dart';
+import 'QuizBLoC.dart';
+import 'QuizEvent.dart';
 
-class QuizAppProdivers extends StatelessWidget {
-  const QuizAppProdivers({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choix du thème'),
-        centerTitle: true,
-        backgroundColor: Colors.purpleAccent,
-        actions: [ThemeSwitcher()],
-      ),
-      body: const ThemeSelectionPage(),
-    );
-  }
-}
-
-class ThemeSelectionPage extends StatefulWidget {
-  const ThemeSelectionPage({super.key});
+class ThemeSelectionPageBLoC extends StatefulWidget {
+  const ThemeSelectionPageBLoC({super.key});
 
   @override
-  ThemeSelectionPageState createState() => ThemeSelectionPageState();
+  _ThemeSelectionPageBLoCState createState() => _ThemeSelectionPageBLoCState();
 }
 
-class ThemeSelectionPageState extends State<ThemeSelectionPage> {
+class _ThemeSelectionPageBLoCState extends State<ThemeSelectionPageBLoC> {
   List<dynamic> themes = [];
 
   @override
@@ -73,6 +59,12 @@ class ThemeSelectionPageState extends State<ThemeSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Choix du thème'),
+        centerTitle: true,
+        backgroundColor: Colors.purpleAccent,
+        actions: [ThemeSwitcher()],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView.builder(
@@ -91,7 +83,7 @@ class ThemeSelectionPageState extends State<ThemeSelectionPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => QuizProviders(theme: themes[index]),
+                      builder: (context) => QuizAppBLoC(theme: themes[index]),
                     ),
                   );
                 },
