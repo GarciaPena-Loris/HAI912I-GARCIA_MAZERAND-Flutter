@@ -1,11 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../ThemeSwitcher.dart';
-import 'QuizAppBLoC.dart';
-import 'QuizBLoC.dart';
-import 'QuizEvent.dart';
+import '../../../Question1/presentation/widgets/ThemeSwitcher.dart';
+import '../screens/QuizAppBLoC.dart';
 
 class ThemeSelectionPageBLoC extends StatefulWidget {
   const ThemeSelectionPageBLoC({super.key});

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'Exercice1/ThemeSwitcher.dart';
-import 'ThemeProvider.dart';
-import 'Exercice1/Question1/QuizAppProviders.dart';
-import 'Exercice1/Question2/ThemeSelectionPageBLoC.dart';
-import 'Exercice1/Question1/QuizProvider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'Exercice1/Question1/presentation/widgets/ThemeSwitcher.dart';
+import 'Exercice2/presentation/page/WeatherPage.dart';
+import 'Exercice1/Question1/data/providers/ThemeProvider.dart';
+import 'Exercice1/Question1/presentation/screens/QuizAppProviders.dart';
+import 'Exercice1/Question2/presentation/pages/ThemeSelectionPageBLoC.dart';
+import 'Exercice1/Question1/data/providers/QuizProvider.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -41,7 +47,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        title: const Text('TP2 · Gestion Avancée'),
         backgroundColor: Colors.purpleAccent,
         actions: [ThemeSwitcher()],
       ),
@@ -60,7 +66,7 @@ class HomePage extends StatelessWidget {
                 label: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Exercice 1 : Quiz (avec Provider)',
+                    'Exercice 1 : Quizz \n (avec Provider)',
                     style: TextStyle(fontSize: 18, color: textColor),
                   ),
                 ),
@@ -74,8 +80,7 @@ class HomePage extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 20), // Add space between the buttons
-
+            const SizedBox(height: 20),
             SizedBox(
               height: 60,
               width: 300,
@@ -87,7 +92,7 @@ class HomePage extends StatelessWidget {
                 label: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Exercice 2 : Quiz (avec BLoC)',
+                    'Exercice 1 : Quizz \n (avec BLoC)',
                     style: TextStyle(fontSize: 18, color: textColor),
                   ),
                 ),
@@ -96,6 +101,32 @@ class HomePage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ThemeSelectionPageBLoC(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 60,
+              width: 300,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                ),
+                icon: Icon(Icons.cloud, color: textColor),
+                label: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Exercice 2 : Météo',
+                    style: TextStyle(fontSize: 18, color: textColor),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WeatherPage(),
                     ),
                   );
                 },

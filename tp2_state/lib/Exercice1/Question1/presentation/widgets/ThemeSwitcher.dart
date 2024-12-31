@@ -1,6 +1,7 @@
+// lib/ThemeSwitcher.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../ThemeProvider.dart';
+import '../../data/providers/ThemeProvider.dart';
 
 class ThemeSwitcher extends StatelessWidget {
   @override

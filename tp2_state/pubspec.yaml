@@ -44,6 +44,8 @@ dependencies:
   flutter_bloc: ^8.1.6
   provider: ^6.1.2
   http: ^1.2.2
+  intl: ^0.20.1
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

@@ -1,68 +1,35 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../ResultPage.dart';
-import '../../ThemeProvider.dart';
-import 'QuizProvider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../Question1/presentation/widgets/ThemeSwitcher.dart';
+import '../../business_logic/blocs/QuizBLoC.dart';
+import '../../business_logic/events/QuizEvent.dart';
+import '../../business_logic/states/QuizState.dart';
+import '../../../Question1/presentation/pages/ResultPage.dart';
 
-class QuizProviders extends StatefulWidget {
+class QuizAppBLoC extends StatelessWidget {
   final Map<String, dynamic> theme;
 
-  const QuizProviders({super.key, required this.theme});
-
-  @override
-  _QuizProvidersState createState() => _QuizProvidersState();
-}
-
-class _QuizProvidersState extends State<QuizProviders> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final quizProvider = Provider.of<QuizProvider>(context, listen: false);
-      quizProvider.setQuestions(_getRandomQuestions(widget.theme['questions']));
-    });
-  }
+  const QuizAppBLoC({super.key, required this.theme});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("${widget.theme['theme']}"),
-        centerTitle: true,
-        backgroundColor: Colors.purpleAccent,
-        actions: [
-          Row(
-            children: [
-              if (Provider.of<ThemeProvider>(context).themeMode != ThemeMode.dark)
-                const Icon(Icons.wb_sunny, color: Colors.yellow),
-              Switch(
-                value: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark,
-                onChanged: (value) {
-                  Provider.of<ThemeProvider>(context, listen: false).toggleTheme(value);
-                },
-                activeColor: Colors.black,
-              ),
-              if (Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark)
-                const Icon(Icons.nightlight_round, color: Colors.yellow),
-            ],
-          ),
-        ],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Consumer<QuizProvider>(
-            builder: (context, quizProvider, child) {
-              if (quizProvider.questions.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final currentQuestion = quizProvider.questions[quizProvider.currentQuestionIndex];
-              final userAnswer = quizProvider.answers[quizProvider.currentQuestionIndex];
-              final textColor = Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.black;
+    return BlocProvider(
+      create: (context) => QuizBloc()..add(LoadQuestions(theme)),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(theme['theme']),
+          centerTitle: true,
+          backgroundColor: Colors.purpleAccent,
+          actions: [ThemeSwitcher()],
+        ),
+        body: BlocBuilder<QuizBloc, QuizState>(
+          builder: (context, state) {
+            if (state is QuizLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is QuizLoaded) {
+              final currentQuestion = state.questions[state.currentQuestionIndex];
+              final userAnswer = state.answers[state.currentQuestionIndex];
+              final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -70,7 +37,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                 children: [
                   const Spacer(),
                   Image.asset(
-                    'assets/images/${widget.theme['theme']}.png',
+                    'assets/images/${theme['theme']}.png',
                     height: 150,
                     fit: BoxFit.cover,
                   ),
@@ -103,21 +70,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                           ),
                           onPressed: userAnswer == null
                               ? () {
-                                  quizProvider.submitAnswer(true);
-                                  if (quizProvider.allQuestionsAnswered()) {
-                                    Future.delayed(const Duration(seconds: 2), () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ResultPage(score: quizProvider.calculateScore()),
-                                        ),
-                                      );
-                                    });
-                                  } else {
-                                    Future.delayed(const Duration(seconds: 1), () {
-                                      quizProvider.nextQuestion();
-                                    });
-                                  }
+                                  context.read<QuizBloc>().add(SubmitAnswer(true));
                                 }
                               : null,
                           child: Text("Vrai", style: TextStyle(color: textColor)),
@@ -138,21 +91,7 @@ class _QuizProvidersState extends State<QuizProviders> {
                           ),
                           onPressed: userAnswer == null
                               ? () {
-                                  quizProvider.submitAnswer(false);
-                                  if (quizProvider.allQuestionsAnswered()) {
-                                    Future.delayed(const Duration(seconds: 2), () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ResultPage(score: quizProvider.calculateScore()),
-                                        ),
-                                      );
-                                    });
-                                  } else {
-                                    Future.delayed(const Duration(seconds: 1), () {
-                                      quizProvider.nextQuestion();
-                                    });
-                                  }
+                                  context.read<QuizBloc>().add(SubmitAnswer(false));
                                 }
                               : null,
                           child: Text("Faux", style: TextStyle(color: textColor)),
@@ -170,32 +109,32 @@ class _QuizProvidersState extends State<QuizProviders> {
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                       ),
-                      itemCount: quizProvider.questions.length,
+                      itemCount: state.questions.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
-                            quizProvider.currentQuestionIndex = index;
+                            context.read<QuizBloc>().add(GoToQuestion(index));
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: quizProvider.answers[index] == null
+                              color: state.answers[index] == null
                                   ? Colors.grey
-                                  : quizProvider.answers[index] == "Vrai" &&
-                                          quizProvider.questions[index]['isCorrect'] == true
+                                  : state.answers[index] == "Vrai" &&
+                                          state.questions[index]['isCorrect'] == true
                                       ? Colors.green
-                                      : quizProvider.answers[index] == "Faux" &&
-                                              quizProvider.questions[index]['isCorrect'] == false
+                                      : state.answers[index] == "Faux" &&
+                                              state.questions[index]['isCorrect'] == false
                                           ? Colors.green
                                           : Colors.red,
                               borderRadius: BorderRadius.circular(10),
-                              border: index == quizProvider.currentQuestionIndex
+                              border: index == state.currentQuestionIndex
                                   ? Border.all(color: textColor, width: 2)
                                   : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               "${index + 1}",
-                              style: index == quizProvider.currentQuestionIndex
+                              style: index == state.currentQuestionIndex
                                   ? TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)
                                   : TextStyle(color: textColor),
                             ),
@@ -208,9 +147,9 @@ class _QuizProvidersState extends State<QuizProviders> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: quizProvider.currentQuestionIndex > 0
+                        onPressed: state.currentQuestionIndex > 0
                             ? () {
-                                quizProvider.previousQuestion();
+                                context.read<QuizBloc>().add(PreviousQuestion());
                               }
                             : null,
                         icon: Icon(Icons.arrow_back, color: textColor),
@@ -221,9 +160,9 @@ class _QuizProvidersState extends State<QuizProviders> {
                         ),
                       ),
                       ElevatedButton.icon(
-                        onPressed: quizProvider.currentQuestionIndex < 9
+                        onPressed: state.currentQuestionIndex < state.questions.length - 1
                             ? () {
-                                quizProvider.nextQuestion();
+                                context.read<QuizBloc>().add(NextQuestion());
                               }
                             : null,
                         label: Text("Suivant", style: TextStyle(color: textColor)),
@@ -237,22 +176,22 @@ class _QuizProvidersState extends State<QuizProviders> {
                   ),
                 ],
               );
-            },
-          ),
+            } else if (state is QuizCompleted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultPage(score: state.score),
+                  ),
+                );
+              });
+              return const Center(child: CircularProgressIndicator());
+            } else {
+              return const Center(child: Text('Something went wrong!'));
+            }
+          },
         ),
       ),
     );
-  }
-
-  List<dynamic> _getRandomQuestions(List<dynamic> allQuestions) {
-    final random = Random();
-    final List<dynamic> selectedQuestions = [];
-    while (selectedQuestions.length < 10) {
-      final question = allQuestions[random.nextInt(allQuestions.length)];
-      if (!selectedQuestions.contains(question)) {
-        selectedQuestions.add(question);
-      }
-    }
-    return selectedQuestions;
   }
 }

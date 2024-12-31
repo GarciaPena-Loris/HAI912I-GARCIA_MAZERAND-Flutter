@@ -1,8 +1,7 @@
-// lib/Exercice1/Question2/QuizBLoC.dart
 import 'dart:math';
 import 'package:bloc/bloc.dart';
-import 'QuizEvent.dart';
-import 'QuizState.dart';
+import '../events/QuizEvent.dart';
+import '../states/QuizState.dart';
 
 class QuizBloc extends Bloc<QuizEvent, QuizState> {
   QuizBloc() : super(QuizInitial()) {

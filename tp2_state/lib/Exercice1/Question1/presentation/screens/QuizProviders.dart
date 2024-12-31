@@ -1,35 +1,68 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../ThemeSwitcher.dart';
-import 'QuizBLoC.dart';
-import 'QuizEvent.dart';
-import 'QuizState.dart';
-import '../ResultPage.dart';
+import 'package:provider/provider.dart';
+import '../pages/ResultPage.dart';
+import '../../data/providers/ThemeProvider.dart';
+import '../../data/providers/QuizProvider.dart';
 
-class QuizAppBLoC extends StatelessWidget {
+class QuizProviders extends StatefulWidget {
   final Map<String, dynamic> theme;
 
-  const QuizAppBLoC({super.key, required this.theme});
+  const QuizProviders({super.key, required this.theme});
+
+  @override
+  _QuizProvidersState createState() => _QuizProvidersState();
+}
+
+class _QuizProvidersState extends State<QuizProviders> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final quizProvider = Provider.of<QuizProvider>(context, listen: false);
+      quizProvider.setQuestions(_getRandomQuestions(widget.theme['questions']));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => QuizBloc()..add(LoadQuestions(theme)),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(theme['theme']),
-          centerTitle: true,
-          backgroundColor: Colors.purpleAccent,
-          actions: [ThemeSwitcher()],
-        ),
-        body: BlocBuilder<QuizBloc, QuizState>(
-          builder: (context, state) {
-            if (state is QuizLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is QuizLoaded) {
-              final currentQuestion = state.questions[state.currentQuestionIndex];
-              final userAnswer = state.answers[state.currentQuestionIndex];
-              final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("${widget.theme['theme']}"),
+        centerTitle: true,
+        backgroundColor: Colors.purpleAccent,
+        actions: [
+          Row(
+            children: [
+              if (Provider.of<ThemeProvider>(context).themeMode != ThemeMode.dark)
+                const Icon(Icons.wb_sunny, color: Colors.yellow),
+              Switch(
+                value: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark,
+                onChanged: (value) {
+                  Provider.of<ThemeProvider>(context, listen: false).toggleTheme(value);
+                },
+                activeColor: Colors.black,
+              ),
+              if (Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark)
+                const Icon(Icons.nightlight_round, color: Colors.yellow),
+            ],
+          ),
+        ],
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Consumer<QuizProvider>(
+            builder: (context, quizProvider, child) {
+              if (quizProvider.questions.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final currentQuestion = quizProvider.questions[quizProvider.currentQuestionIndex];
+              final userAnswer = quizProvider.answers[quizProvider.currentQuestionIndex];
+              final textColor = Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black;
 
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -37,7 +70,7 @@ class QuizAppBLoC extends StatelessWidget {
                 children: [
                   const Spacer(),
                   Image.asset(
-                    'assets/images/${theme['theme']}.png',
+                    'assets/images/${widget.theme['theme']}.png',
                     height: 150,
                     fit: BoxFit.cover,
                   ),
@@ -70,7 +103,21 @@ class QuizAppBLoC extends StatelessWidget {
                           ),
                           onPressed: userAnswer == null
                               ? () {
-                                  context.read<QuizBloc>().add(SubmitAnswer(true));
+                                  quizProvider.submitAnswer(true);
+                                  if (quizProvider.allQuestionsAnswered()) {
+                                    Future.delayed(const Duration(seconds: 2), () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ResultPage(score: quizProvider.calculateScore()),
+                                        ),
+                                      );
+                                    });
+                                  } else {
+                                    Future.delayed(const Duration(seconds: 1), () {
+                                      quizProvider.nextQuestion();
+                                    });
+                                  }
                                 }
                               : null,
                           child: Text("Vrai", style: TextStyle(color: textColor)),
@@ -91,7 +138,21 @@ class QuizAppBLoC extends StatelessWidget {
                           ),
                           onPressed: userAnswer == null
                               ? () {
-                                  context.read<QuizBloc>().add(SubmitAnswer(false));
+                                  quizProvider.submitAnswer(false);
+                                  if (quizProvider.allQuestionsAnswered()) {
+                                    Future.delayed(const Duration(seconds: 2), () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ResultPage(score: quizProvider.calculateScore()),
+                                        ),
+                                      );
+                                    });
+                                  } else {
+                                    Future.delayed(const Duration(seconds: 1), () {
+                                      quizProvider.nextQuestion();
+                                    });
+                                  }
                                 }
                               : null,
                           child: Text("Faux", style: TextStyle(color: textColor)),
@@ -109,32 +170,32 @@ class QuizAppBLoC extends StatelessWidget {
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                       ),
-                      itemCount: state.questions.length,
+                      itemCount: quizProvider.questions.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
-                            context.read<QuizBloc>().add(GoToQuestion(index));
+                            quizProvider.currentQuestionIndex = index;
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: state.answers[index] == null
+                              color: quizProvider.answers[index] == null
                                   ? Colors.grey
-                                  : state.answers[index] == "Vrai" &&
-                                          state.questions[index]['isCorrect'] == true
+                                  : quizProvider.answers[index] == "Vrai" &&
+                                          quizProvider.questions[index]['isCorrect'] == true
                                       ? Colors.green
-                                      : state.answers[index] == "Faux" &&
-                                              state.questions[index]['isCorrect'] == false
+                                      : quizProvider.answers[index] == "Faux" &&
+                                              quizProvider.questions[index]['isCorrect'] == false
                                           ? Colors.green
                                           : Colors.red,
                               borderRadius: BorderRadius.circular(10),
-                              border: index == state.currentQuestionIndex
+                              border: index == quizProvider.currentQuestionIndex
                                   ? Border.all(color: textColor, width: 2)
                                   : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               "${index + 1}",
-                              style: index == state.currentQuestionIndex
+                              style: index == quizProvider.currentQuestionIndex
                                   ? TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)
                                   : TextStyle(color: textColor),
                             ),
@@ -147,9 +208,9 @@ class QuizAppBLoC extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: state.currentQuestionIndex > 0
+                        onPressed: quizProvider.currentQuestionIndex > 0
                             ? () {
-                                context.read<QuizBloc>().add(PreviousQuestion());
+                                quizProvider.previousQuestion();
                               }
                             : null,
                         icon: Icon(Icons.arrow_back, color: textColor),
@@ -160,9 +221,9 @@ class QuizAppBLoC extends StatelessWidget {
                         ),
                       ),
                       ElevatedButton.icon(
-                        onPressed: state.currentQuestionIndex < state.questions.length - 1
+                        onPressed: quizProvider.currentQuestionIndex < 9
                             ? () {
-                                context.read<QuizBloc>().add(NextQuestion());
+                                quizProvider.nextQuestion();
                               }
                             : null,
                         label: Text("Suivant", style: TextStyle(color: textColor)),
@@ -176,22 +237,22 @@ class QuizAppBLoC extends StatelessWidget {
                   ),
                 ],
               );
-            } else if (state is QuizCompleted) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ResultPage(score: state.score),
-                  ),
-                );
-              });
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              return const Center(child: Text('Something went wrong!'));
-            }
-          },
+            },
+          ),
         ),
       ),
     );
+  }
+
+  List<dynamic> _getRandomQuestions(List<dynamic> allQuestions) {
+    final random = Random();
+    final List<dynamic> selectedQuestions = [];
+    while (selectedQuestions.length < 10) {
+      final question = allQuestions[random.nextInt(allQuestions.length)];
+      if (!selectedQuestions.contains(question)) {
+        selectedQuestions.add(question);
+      }
+    }
+    return selectedQuestions;
   }
 }
