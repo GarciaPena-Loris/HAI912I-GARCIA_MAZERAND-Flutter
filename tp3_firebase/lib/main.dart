@@ -111,6 +111,7 @@ class WelcomePage extends StatelessWidget {
   }
 }
 
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -123,7 +124,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Liste d\'applications'),
+        title: const Text('Page d\'accueil'),
         centerTitle: true,
         backgroundColor: Colors.green,
         actions: [
@@ -136,19 +137,20 @@ class HomePage extends StatelessWidget {
                 activeColor: Colors.black,
               ),
               if (isDarkMode) const Icon(Icons.nightlight_round, color: Colors.yellow),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Déconnexion réussie !')),
-                  );
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WelcomePage()),
-                  );
-                },
-              ),
+              if (user != null)
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Déconnexion réussie !')),
+                    );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const WelcomePage()),
+                    );
+                  },
+                ),
             ],
           ),
         ],
@@ -192,9 +194,9 @@ class HomePage extends StatelessWidget {
             }).toList(),
             ...[
               {'title': 'Exercice 2 : Quiz', 'page': const QuizApp()},
-              {'title': 'Add Theme', 'page': const AddThemePage()},
-              {'title': 'Add Question', 'page': const AddQuestionPage()},
-              {'title': 'Profile', 'page': const ProfilePage()},
+              if (user != null) {'title': 'Add Theme', 'page': const AddThemePage()},
+              if (user != null) {'title': 'Add Question', 'page': const AddQuestionPage()},
+              if (user != null) {'title': 'Profile', 'page': const ProfilePage()},
             ].map((item) {
               return Column(
                 children: [

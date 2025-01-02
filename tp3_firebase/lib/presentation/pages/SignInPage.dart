@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
+import 'SignUpPage.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -113,8 +114,10 @@ class SignInPageState extends State<SignInPage> {
                 const Text("Pas encore inscrit ? "),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/signup'); // Remplacez '/signup' par la route de votre page d'inscription
-                  },
+                    Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const SignUpPage()), // Navigate to SignUpPage
+                    );
+                    },
                   child: const Text('Créer un compte'),
                 ),
               ],
